@@ -3,6 +3,9 @@ This project provides Python replacements for i3bar and i3status, used in the i3
 
 You can either only use the status line generator **cstatus** with the original i3bar or replace the i3bar with **cbar**.
 
+## Screenshot
+![cbar](screenshot.png?raw=true "CBar")
+
 ## Use cstatus with i3bar
 Modify your i3 configuration file to include
 ```
