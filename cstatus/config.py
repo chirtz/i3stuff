@@ -5,7 +5,7 @@ from modules.network import Network
 from modules.text import Text
 from modules.battery import Battery
 from user_funcs import logout
-
+from tools import Tools
 
 class Config:
     """
@@ -17,5 +17,5 @@ class Config:
         Network("eno1", interval=30),
         Volume(),
         Clock(interval=5),
-        Text("", on_clicked=logout),
+        Text(Tools.sym(""), on_clicked=logout),
     ]
