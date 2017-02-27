@@ -8,33 +8,44 @@ class XConnector:
     Connects to the X server via Xlib
     """
     def __init__(self):
-        self.display = display.Display()
-        self.root = self.display.screen().root
-        self.change_listeners = []
+        self._display = display.Display()
+        self._root = self._display.screen().root
+        self._change_listeners = []
+        self._thread = None
+        self._active = False
 
     def add_change_listener(self, cb_func):
         """
         Adds a callback function to be called when the workspace was switched
         :param cb_func:
         """
-        self.change_listeners.append(cb_func)
+        self._change_listeners.append(cb_func)
 
     def start_listening(self):
         """
         Starts the listener thread for workspace changes
         """
-        t = Thread(target=XConnector._monitor_thread, daemon=True, args=[self.change_listeners])
-        t.start()
+        self._thread = Thread(target=self._monitor_thread, daemon=True)
+        self._thread.start()
+        self._active = True
+
+    def stop_listening(self):
+        """
+        Stops the listener thread
+        """
+        if self._thread:
+            self._active = False
+            self._thread.join()
 
     def _send_event(self, ctype, data, mask=None):
         """
         Wraps and sends commands to the X server
         """
         data = (data+[0]*(5-len(data)))[:5]
-        ev = Xlib.protocol.event.ClientMessage(window=self.root, client_type=ctype, data=(32, data))
+        ev = Xlib.protocol.event.ClientMessage(window=self._root, client_type=ctype, data=(32, data))
         if not mask:
             mask = (X.SubstructureRedirectMask | X.SubstructureNotifyMask)
-        self.root.send_event(ev, event_mask=mask)
+        self._root.send_event(ev, event_mask=mask)
 
     def get_wm_name(self):
         """
@@ -42,7 +53,7 @@ class XConnector:
         :return: window manager
         :rtype: str
         """
-        return self.root.get_full_property(self.display.intern_atom("_NET_WM_NAME"), 0).value
+        return self._root.get_full_property(self._display.intern_atom("_NET_WM_NAME"), 0).value
 
     def switch_workspace(self, num):
         """
@@ -51,11 +62,11 @@ class XConnector:
         :type num: int
         """
         num = max(0, num)
-        self._send_event(self.display.intern_atom("_NET_CURRENT_DESKTOP"), [num, X.CurrentTime])
-        self.display.flush()
+        self._send_event(self._display.intern_atom("_NET_CURRENT_DESKTOP"), [num, X.CurrentTime])
+        self._display.flush()
 
     def _get_value(self, prop):
-        return self.root.get_full_property(self.display.intern_atom(prop), 0).value[0]
+        return self._root.get_full_property(self._display.intern_atom(prop), 0).value[0]
 
     def get_current_workspace(self):
         """
@@ -79,16 +90,15 @@ class XConnector:
         :return: list of workspace names
         :rtype: list of str
         """
-        return self.root.get_full_property(self.display.intern_atom("_NET_DESKTOP_NAMES"), 0).value.split("\x00")[:-1]
+        return self._root.get_full_property(self._display.intern_atom("_NET_DESKTOP_NAMES"), 0).value.split("\x00")[:-1]
 
-    @staticmethod
-    def _monitor_thread(change_listeners):
+    def _monitor_thread(self):
         dis = display.Display()
         root = dis.screen().root
         root.change_attributes(event_mask=Xlib.X.SubstructureNotifyMask)
-        while True:
+        while self._active:
             evt = dis.next_event()
-            print(evt)
-            for cb in change_listeners:
-                cb()
+            if evt.type == 22 and evt.override == 1 and evt.width == 10:
+                for cb in self._change_listeners:
+                    cb()
 

@@ -41,7 +41,10 @@ class WorkspaceBar(Frame):
         # Update the button contents
         for x in range(num):
             label = self._buttons[x]
-            label["text"] = names[x]
+            try:
+                label["text"] = names[x]
+            except IndexError:
+                label["text"] = str(x+1)
             label.grid(column=x, row=0, sticky=W+E)
             # Set workspace number for callback function on click
             label.__setattr__("wnum", x)

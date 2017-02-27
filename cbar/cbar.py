@@ -20,6 +20,8 @@ class ConnectionType(Enum):
 
 class CBar:
 
+    i3_connection = None
+
     def __init__(self, config):
         """
         Initialize stuff
@@ -39,6 +41,7 @@ class CBar:
         Initializes the layout of the root and children views
         """
         self.root = Tk()
+        self.root.wm_client("cbar")
         # uniform background color
         self.root["bg"] = self._config["Colors"]["bg_default"]
         self.root.resizable(width=False, height=False)
@@ -65,13 +68,32 @@ class CBar:
         """
         Initializes the IPC connection to i3
         """
-        import i3ipc
         self._connection = ConnectionType.I3
-        i3 = i3ipc.Connection()
-        i3.on('workspace', self._workspace_bar.update_buttons_i3)
-        i3_thread = threading.Thread(daemon=True, target=i3.main)
+        i3_thread = threading.Thread(daemon=True, target=self._i3_thread)
         i3_thread.start()
-        self._workspace_bar.update_buttons_i3(i3, None)
+
+    def _i3_thread(self):
+        """
+        Thread running the main loop for the i3 IPC. In case the connection is lost, e.g. due to an i3 reload,
+        wait a bit and try to establish the connection, again.
+        """
+        global i3_connection
+        import i3ipc
+        import time
+        while True:
+            try:
+                i3_connection = i3ipc.Connection()
+                i3_connection.on('workspace', self._workspace_bar.update_buttons_i3)
+                i3_connection.on('mode', lambda _, x: print(x))
+                # Initial workspace bar refresh
+                self._workspace_bar.update_buttons_i3(i3_connection, None)
+                print("i3 connected")
+                i3_connection.main()
+            except Exception as e:
+                print(e)
+            finally:
+                print("i3 connection lost, retry...")
+                time.sleep(1)
 
     def _init_x11_ipc(self):
         """
@@ -83,7 +105,13 @@ class CBar:
         self._workspace_bar.update_buttons_standard()
 
     def mainloop(self):
-        self.root.mainloop()
+        try:
+            self.root.mainloop()
+        except KeyboardInterrupt:  # gracefully exit on Ctrl+C
+            print("Exiting cbar...")
+        finally:
+            if self.i3_connection:
+                self.i3_connection.main_quit()
 
 
 if __name__ == "__main__":
