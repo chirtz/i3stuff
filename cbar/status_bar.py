@@ -72,4 +72,5 @@ class StatusBar(Frame):
         """
         Callback for a clicked status item
         """
-        self._cstatus.item_clicked(event.widget.cname, 1, event.x, event.y)
+        if hasattr(event.widget, "cname"):
+            self._cstatus.item_clicked(event.widget.cname, 1, event.x, event.y)
