@@ -88,15 +88,15 @@ class CBar:
 
 if __name__ == "__main__":
     # CStatus needs to be in the PYTHONPATH
+    p = os.path.dirname(os.path.realpath(__file__))
     # Remove this line and add cstatus to the PYTHONPATH variable
-    sys.path.append(os.path.abspath("../cstatus"))
+    sys.path.append("%s/../cstatus" % p)
     from status_bar import StatusBar
     from workspaces_bar import WorkspaceBar
     from xconnector import XConnector
 
     # read config file and pass it to the bar, then loop
     cnf = configparser.ConfigParser()
-    p = os.path.dirname(os.path.realpath(__file__))
     cnf.read("%s/config.ini" % p)
     bar = CBar(cnf)
     bar.mainloop()
