@@ -31,6 +31,10 @@ class BasicModule:
         return self.props["name"]
 
     def clicked(self, button, pos_x, pos_y):
+        """
+        Called when clicking the module with the mouse
+        :param button: the mouse button, 1=left, 2=mid, 3=right
+        """
         pass
 
     def start(self):

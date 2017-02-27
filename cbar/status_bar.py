@@ -40,6 +40,8 @@ class StatusBar(Frame):
             for x in range(0, diff):
                 label = Label(self)
                 label.bind("<Button-1>", self._status_clicked)
+                label.bind("<Button-2>", self._status_clicked)
+                label.bind("<Button-3>", self._status_clicked)
                 label["font"] = self._config.get("font")
                 label["fg"] = self._colors["fg_button"]
                 self._items.append(label)
@@ -73,4 +75,4 @@ class StatusBar(Frame):
         Callback for a clicked status item
         """
         if hasattr(event.widget, "cname"):
-            self._cstatus.item_clicked(event.widget.cname, 1, event.x, event.y)
+            self._cstatus.item_clicked(event.widget.cname, event.num, event.x, event.y)
