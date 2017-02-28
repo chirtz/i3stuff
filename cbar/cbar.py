@@ -56,7 +56,12 @@ class CBar:
         self.root.columnconfigure(0, weight=1)
 
         # Set width to screen width and height to minimal height given in config file
-        self.root.wm_minsize(self.root.winfo_screenwidth(), height=self._config.get("General", "min_height"))
+        if "bottom" in self._config["General"]["position"].lower():
+            y_pos = self.root.winfo_screenheight()
+        else:
+            y_pos = 0
+        self.root.wm_geometry("+0+%d" % y_pos)
+        self.root.wm_minsize(self.root.winfo_screenwidth(), height=self._config.getint("General", "min_height"))
 
         # Initialize the workspace bar (left, shows workspace names/numbers)
         self._workspace_bar = WorkspaceBar(self.root, self._xconnector, self._config["Workspaces"],
