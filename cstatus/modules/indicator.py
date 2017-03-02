@@ -1,17 +1,16 @@
 from modules.modules import BasicModule
-from pydbus import SessionBus
 from tools import Tools
+from modules.ipcserver import IPCServer
 
-class Indicator(BasicModule):
+
+class Indicator(BasicModule, IPCServer):
     """
-      <node>
-        <interface name='de.chirtz.i3bar.indicator'>
-          <method name='indicate'>
-          <arg type='s' name='a' direction='in'/>
-          <arg type='s' name='response' direction='out'/>
-          </method>
-        </interface>
-      </node>
+    Indicator Module
+    Shows a circle with user-definable color, changeable via the given
+    local socket port
+    Example:
+        Use the following in the console to set the color to green when the server port is 8080
+        $   echo "#00ff00" | netcat localhost 8080
     """
 
     defaults = {
@@ -19,21 +18,19 @@ class Indicator(BasicModule):
         "circle": Tools.sym("")
     }
 
-    def __init__(self, **kwargs):
-        super().__init__(template=self.defaults["circle"], color="#000000", **kwargs)
-        self.bus = SessionBus()
-        for i in range(0, 5):
-            try:
-                self.obj = self.bus.publish("de.chirtz.i3bar.indicator%d" % i, self)
-                break
-            except RuntimeError:
-                pass
+    def __init__(self, template=defaults["circle"], color="#000000", port=8080, **kwargs):
+        BasicModule.__init__(self, template=template, color=color, **kwargs)
+        IPCServer.__init__(self, port=port)
 
     def clicked(self, button, *_):
         if button == 1:
             self.set_color("#ff0000")
         else:
             self.set_color("#ffffff")
+
+    def on_recv(self, data):
+        if len(data) == 7 and data.startswith("#"):
+            self.set_color(data)
 
     def pre_output(self):
         if self.get_color() == self.values["inactive_color"]:
@@ -42,15 +39,7 @@ class Indicator(BasicModule):
             self.active = True
 
     def stop(self):
-        try:
-            self.obj.unpublish()
-        except NameError:
-            pass
-
-    def indicate(self, s):
-        self.set_color(s)
-        return s
-
+        pass
 
 
 

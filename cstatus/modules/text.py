@@ -1,26 +1,39 @@
 from modules.modules import BasicModule
-from pydbus import SessionBus
+from modules.ipcserver import IPCServer
 
 
-class Text(BasicModule):
+class SimpleText(BasicModule):
     """
-      <node>
-        <interface name='de.chirtz.i3bar.text'>
-          <method name='set'>
-          <arg type='s' name='a' direction='in'/>
-          </method>
-        </interface>
-      </node>
+    Simple Text Module
+    Shows the given text
     """
 
-    def __init__(self, text, **kwargs):
-        super().__init__("$text", **kwargs)
-        self.values["text"] = text
-        self.bus = SessionBus()
-        self.obj = self.bus.publish("de.chirtz.i3bar.text", self)
+    defaults = {
+        "text": ""
+    }
+
+    def __init__(self, template="$text", **kwargs):
+        super().__init__(template=template, **kwargs)
 
     def set(self, s):
         self.values["text"] = s
+
+
+class InteractiveText(SimpleText, IPCServer):
+    """
+    Interactive Text Module
+    Shows the given text. The text can furthermore be modified via a local socket
+    Example:
+        Use the following in the console to set the text to foo when the server port is set to 8080
+        $   echo "foo" | netcat localhost 8080
+    """
+
+    def __init__(self, port=8081, **kwargs):
+        SimpleText.__init__(self, **kwargs)
+        IPCServer.__init__(self, port=port)
+
+    def on_recv(self, data):
+        self.set(data)
 
 
 

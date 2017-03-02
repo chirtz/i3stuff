@@ -81,3 +81,29 @@ class ThreadModule(BasicModule):
 
     def repeat(self):
         pass
+
+
+class ThreadModule(BasicModule):
+    def __init__(self, template, interval=None, **kwargs):
+        super().__init__(template, **kwargs)
+        if interval:
+            self.interval = interval
+        else:
+            self.interval = 0
+        self._stop_signal = threading.Event()
+
+    def start(self):
+        t = threading.Thread(target=self._repeat)
+        t.daemon = True
+        t.start()
+
+    def stop(self):
+        self._stop_signal.set()
+
+    def _repeat(self):
+        self.repeat()
+        while not self._stop_signal.wait(self.interval):
+            self.repeat()
+
+    def repeat(self):
+        pass

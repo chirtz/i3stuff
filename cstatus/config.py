@@ -2,7 +2,7 @@ from modules.clock import Clock
 from modules.indicator import Indicator
 from modules.volume import Volume
 from modules.network import Network
-from modules.text import Text
+from modules.text import SimpleText, InteractiveText
 from modules.battery import Battery
 from user_funcs import logout
 from tools import Tools
@@ -17,5 +17,5 @@ class Config:
         Network("eno1", interval=30),
         Volume(),
         Clock(interval=5),
-        Text(Tools.sym(""), on_clicked=logout),
+        SimpleText(Tools.sym(""), on_clicked=logout),
     ]

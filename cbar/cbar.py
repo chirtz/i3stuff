@@ -132,4 +132,9 @@ if __name__ == "__main__":
     cnf = configparser.ConfigParser()
     cnf.read("%s/config.ini" % p)
     bar = CBar(cnf)
+    import asyncore
+
+    t1 = threading.Thread(target=asyncore.loop, daemon=True)
+    t1.start()
     bar.mainloop()
+

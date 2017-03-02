@@ -4,7 +4,7 @@ import time
 import threading
 import json
 import sys
-from gi.repository import GLib, GObject
+import asyncore
 from config import Config
 
 
@@ -43,16 +43,6 @@ class CStatus:
             self._module_map[name].clicked(button, x, y)
         except KeyError:
             pass
-
-    @staticmethod
-    def run():
-        """
-        Glib main loop to process commands (needed for DBUS stuff)
-        :return:
-        """
-        GObject.threads_init()
-        loop = GLib.MainLoop()
-        loop.run()
 
     def _update(self):
         """
@@ -110,13 +100,16 @@ def init_i3bar_connection(cstatus):
                 pass
 
     cstatus.register_callback(print_status)
-    t1 = threading.Thread(target=i3bar_reader, daemon=True)
+    t1 = threading.Thread(target=i3bar_reader, daemon=False)
     t1.start()
 
 
 if __name__ == "__main__":
     status = CStatus()
     init_i3bar_connection(status)
-    CStatus.run()
+    try:
+        asyncore.loop()
+    except KeyboardInterrupt:
+        sys.exit(0)
 
 
