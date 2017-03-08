@@ -10,6 +10,7 @@ class BasicModule:
 
     def __init__(self, template, on_clicked=None, constants=None, color=None, active=True):
         self.values = dict(self.defaults)
+        self.__bar = None
         self.props = dict()
         if constants:
             self.values.update(constants)
@@ -37,8 +38,11 @@ class BasicModule:
         """
         pass
 
-    def start(self):
-        pass
+    def start(self, bar):
+        self.__bar = bar
+
+    def trigger_refresh(self):
+        self.__bar.create_output()
 
     def stop(self):
         pass
@@ -66,33 +70,8 @@ class ThreadModule(BasicModule):
             self.interval = 0
         self._stop_signal = threading.Event()
 
-    def start(self):
-        t = threading.Thread(target=self._repeat)
-        t.daemon = True
-        t.start()
-
-    def stop(self):
-        self._stop_signal.set()
-
-    def _repeat(self):
-        self.repeat()
-        while not self._stop_signal.wait(self.interval):
-            self.repeat()
-
-    def repeat(self):
-        pass
-
-
-class ThreadModule(BasicModule):
-    def __init__(self, template, interval=None, **kwargs):
-        super().__init__(template, **kwargs)
-        if interval:
-            self.interval = interval
-        else:
-            self.interval = 0
-        self._stop_signal = threading.Event()
-
-    def start(self):
+    def start(self, bar):
+        BasicModule.start(self, bar)
         t = threading.Thread(target=self._repeat)
         t.daemon = True
         t.start()

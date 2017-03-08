@@ -17,7 +17,7 @@ class CStatus:
         self._callbacks = []
         for c in Config.bar_items:
             # Start module threads
-            c.start()
+            c.start(self)
             # Make modules accessible via their name for click callbacks
             self._module_map[c.get_name()] = c
         t = threading.Thread(target=self._update, daemon=True)
@@ -44,6 +44,17 @@ class CStatus:
         except KeyError:
             pass
 
+    def create_output(self, include_pre=False):
+        output = []
+        for c in Config.bar_items:
+            if include_pre:
+                # pre_output for non-timed/non-thread (basic) modules
+                c.pre_output()
+            if c.active:
+                output.append(c.get_output())
+        for cb in self._callbacks:
+            cb(output)
+
     def _update(self):
         """
         Regularly outputs the status line
@@ -52,14 +63,7 @@ class CStatus:
         active = True
         while active:
             try:
-                output = []
-                for c in Config.bar_items:
-                    # pre_output for non-timed/non-thread (basic) modules
-                    c.pre_output()
-                    if c.active:
-                        output.append(c.get_output())
-                for cb in self._callbacks:
-                    cb(output)
+                self.create_output(include_pre=True)
                 # sleep
                 time.sleep(Config.UPDATE_INTERVAL)
             except (KeyboardInterrupt, SystemExit):

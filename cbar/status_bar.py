@@ -42,6 +42,8 @@ class StatusBar(Frame):
                 label.bind("<Button-1>", self._status_clicked)
                 label.bind("<Button-2>", self._status_clicked)
                 label.bind("<Button-3>", self._status_clicked)
+                label.bind("<Button-4>", self._status_clicked)
+                label.bind("<Button-5>", self._status_clicked)
                 label["font"] = self._config.get("font")
                 label["fg"] = self._colors["fg_button"]
                 self._items.append(label)

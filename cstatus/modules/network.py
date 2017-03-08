@@ -25,7 +25,7 @@ class Network(ThreadModule):
 
     def __init__(self, interface=None, interval=5, template=None, **kwargs):
         if template:
-            super().__init__(template, **kwargs)
+            super().__init__(template, interval, **kwargs)
         else:
             super().__init__("$icon $ip", interval, **kwargs)
         if interface:
